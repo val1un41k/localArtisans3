@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "248796323584",
+    "firebase_url": "https://localartisans-ea5d7-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "localartisans-ea5d7",
+    "storage_bucket": "localartisans-ea5d7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:248796323584:android:e6d1a1bf881f36859b1de5",
+        "android_client_info": {
+          "package_name": "com.example.local_artisan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDT9AoCx4TqhjjkTQ_PZjMjOFaWgyzu5vA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:248796323584:android:1b53f8d534c90a789b1de5",
+        "android_client_info": {
+          "package_name": "com.example.localartisan3"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDT9AoCx4TqhjjkTQ_PZjMjOFaWgyzu5vA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
