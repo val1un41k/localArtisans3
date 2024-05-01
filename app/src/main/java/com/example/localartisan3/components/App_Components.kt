@@ -34,6 +34,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -122,6 +124,7 @@ fun HeadingTextComponent(value: String) {
         textAlign = TextAlign.Center
     )
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -696,28 +699,6 @@ fun HeadingTextComponentWithoutLogout(value: String){
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun myTextFireldContent(labelValue: String){
-    val textValue = remember { mutableStateOf("") }
-    OutlinedTextField(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(componentShapes.small),
-        label = {Text(text = labelValue)},
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            containerColor = Secondary,
-            focusedBorderColor = Primary,
-            focusedLabelColor = Primary,
-            cursorColor = Primary,
-        ),
-        keyboardOptions = KeyboardOptions.Default,
-        value = textValue.value,
-        onValueChange = {textValue.value = it},
-    )
-}
-
-
 
 @Composable
 fun CustomerClickableTextComponent(value: String, navController: NavHostController){
@@ -808,54 +789,92 @@ fun logoutButton( onButtonClicked: () -> Unit){
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ArtisanCategoryDropdown(elements: ArrayList<String>): String {
+fun ArtisanCategoryDropdown(elements: ArrayList<String>,
+                            onCategorySelected: () -> Unit): String {
     var expanded by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf(elements[0]) }
 
-    Box(modifier = Modifier.wrapContentSize()) {
-        Text(
-            text = selectedCategory,
-            modifier = Modifier.clickable { expanded = true }
-        )
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            elements.forEach { category ->
-                DropdownMenuItem(onClick = {
-                    selectedCategory = category
-                    expanded = false
-                }) {
-                    Text(text = category)
+    Column() {
+        Box(modifier = Modifier.wrapContentSize()) {
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }) {
+
+                TextField(
+                    modifier = Modifier.menuAnchor(),
+                    value = selectedCategory,
+                    onValueChange = { },
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = !expanded }) {
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                    ) {
+                        elements.forEach { category ->
+                            DropdownMenuItem(onClick = {
+                                selectedCategory = category
+                                expanded = false
+                            }) {
+                                Text(text = category)
+                            }
+                        }
+                    }
                 }
+
             }
         }
     }
     return selectedCategory
+    onCategorySelected()
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IntegerDropdown(): Int {
     var expanded by remember { mutableStateOf(false) }
     val numbers = (1..10).toList()
     var selectedNumber by remember { mutableStateOf(numbers[0]) }
 
-    Box(modifier = Modifier.wrapContentSize()) {
-        Text(
-            text = selectedNumber.toString(),
-            modifier = Modifier.clickable { expanded = true }
-        )
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            numbers.forEach { number ->
-                DropdownMenuItem(onClick = {
-                    selectedNumber = number
-                    expanded = false
-                }) {
-                    Text(text = number.toString())
+    Column() {
+        Box(modifier = Modifier.wrapContentSize()) {
+            Text(
+                text = selectedNumber.toString(),
+                modifier = Modifier.clickable { expanded = true }
+            )
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                TextField(
+                    modifier = Modifier.menuAnchor(),
+                    value = selectedNumber.toString(),
+                    onValueChange = { },
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = !expanded }) {
+
+                    numbers.forEach { number ->
+                        DropdownMenuItem(onClick = {
+                            selectedNumber = number
+                            expanded = false
+                        }) {
+                            Text(text = number.toString())
+                        }
+                    }
                 }
             }
         }
@@ -864,36 +883,51 @@ fun IntegerDropdown(): Int {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScreenNavigationDropdown(screens: List<Screen>, currentScreen: Screen){
-    var expanded by remember {mutableStateOf(false)}
-    var selectedScreen by remember {mutableStateOf(currentScreen)}
-    val availableScreens = remember {mutableStateOf(screens.toMutableList())}
+fun ScreenNavigationDropdown(screens: List<Screen>, currentScreen: Screen) {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedScreen by remember { mutableStateOf(currentScreen) }
+    val availableScreens = remember { mutableStateOf(screens.toMutableList()) }
 
     //Remove current Screen from the List
     availableScreens.value.remove(currentScreen)
+    Column() {
 
-    Box(modifier = Modifier.wrapContentSize()){
-        Text(
-            text = "Navigation Menu",
-            modifier = Modifier.clickable { expanded = true }
-        )
-        DropdownMenu(expanded = expanded,
-            onDismissRequest = { expanded = false }) {
-            availableScreens.value.forEach { screen ->
+        Box(modifier = Modifier.wrapContentSize()) {
+            Text(
+                text = "Navigation Menu",
+            )
+            ExposedDropdownMenuBox(expanded = expanded, onExpandedChange =
+            { expanded = !expanded }) {
 
-                DropdownMenuItem(onClick = {
-                    selectedScreen = screen
-                    expanded = false
+                TextField(
+                    modifier = Modifier.menuAnchor(),
+                    value = selectedScreen.name,
+                    onValueChange = { },
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                )
+                ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    availableScreens.value.forEach { screen ->
+                        DropdownMenuItem(
+                            onClick = {
+                                selectedScreen = screen
+                                expanded = false
 
-                    LocalArtisansRouter.navigateTo(screen)
-                }) {
-                    Text(text = screen.name)
+                                LocalArtisansRouter.navigateTo(screen)
+                            },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding){
+                            Text(text = screen.name)
+                        }
+
+                    }
+
                 }
-
             }
-            
         }
-    }
 
+    }
 }

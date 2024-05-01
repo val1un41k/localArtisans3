@@ -1,8 +1,14 @@
 package com.example.localartisan3.data.screens_view_models.cusotmerScreensViewModels
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+
+import com.example.local_artisan.screens.screens_all.customer.CustomerSelectedProductItem
+import com.example.local_artisan.screens.screens_all.customer.LoadedProductFromDB
+import com.example.local_artisan.screens.screens_all.customer.listOfProductsFromDB
 import com.example.localartisan3.data.rules.Validator
 import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.ArtisanProductRecordCreateUIstate
 import com.example.localartisan3.data.screens_view_models.login.LoginUIEvent
@@ -45,8 +51,6 @@ class CustomerMainViewModel : ViewModel(){
     val selectedArtisan = mutableStateOf(ArtisanUIState())
 
     val selectedProduct = mutableStateOf(ArtisanProductRecordCreateUIstate())
-
-    var customerLocation = null
 
 
     fun onEvent(event: LoginUIEvent) {
@@ -293,8 +297,95 @@ class CustomerMainViewModel : ViewModel(){
     ////
     //////////////////////////////////////////////////////////////////////////////////////////
 
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //
+    ////
+    //////Code related to the Creating Request
+    //
+    ////
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+   var customerSelectedProductItem = mutableStateOf(CustomerSelectedProductItem())
+
+    var loadedProductFromDB = mutableStateOf(LoadedProductFromDB())
+
+
+
+
+    fun onEvent(event: CusotmerSelectedProductItemEvent) {
+        when (event) {
+            is CusotmerSelectedProductItemEvent.SelectedProductArtisanIDChanged -> {
+                customerSelectedProductItem.value = customerSelectedProductItem.value.copy(
+                    artisanID = event.artisanID
+                )
+            }
+            is CusotmerSelectedProductItemEvent.SelectedProductArtsanProductCategoryChanged -> {
+                customerSelectedProductItem.value = customerSelectedProductItem.value.copy(
+                    artisanProductCategory = event.artisanProductCategory)
+
+                    if (customerSelectedProductItem.value.artisanProductCategory != null) {
+                     //TODO load products from DB
+
+                        listOfProductsFromDB.value = loadProductsFromDB(customerSelectedProductItem.value.artisanID,
+                            customerSelectedProductItem.value.artisanProductCategory)
+
+                    }
+            }
+            is CusotmerSelectedProductItemEvent.SelectedProductProductItemDiscountPriceChanged -> {
+                customerSelectedProductItem.value = customerSelectedProductItem.value.copy(
+                    artisanProductItemDiscountPrice = event.artisanProductItemDiscountPrice
+                )
+            }
+            is CusotmerSelectedProductItemEvent.SelectedProductArtisanProductItemIDChanged -> {
+                customerSelectedProductItem.value = customerSelectedProductItem.value.copy(
+                    artisanProductItemID = event.artisanProductItemID
+                )
+            }
+            is CusotmerSelectedProductItemEvent.SelectedProductQuantityChanged -> {
+                customerSelectedProductItem.value = customerSelectedProductItem.value.copy(
+                    quantityRequested = event.quantityRequested
+                )
+            }
+            is CusotmerSelectedProductItemEvent.SelectedProductRequestedTotalChanged -> {
+                customerSelectedProductItem.value = customerSelectedProductItem.value.copy(
+                    requestedTotal = event.requestedTotal
+                )
+            }
+        }
+    }
+
+    fun loadProductsFromDB(artisanID: String, category: String)
+    : ArrayList<LoadedProductFromDB>{
+        val db = FirebaseFirestore.getInstance()
+        val productList = ArrayList<LoadedProductFromDB>()
+
+        db.collection("artisan_product_item_within_category")
+            .whereEqualTo("artisanID", artisanID)
+            .whereEqualTo("category", category)
+            .get()
+            .addOnSuccessListener { result ->
+                for (document in result){
+                    val product = document.toObject(LoadedProductFromDB::class.java)
+                    productList.add(product)
+                }
+                Log.d(TAG, "Product List: $productList")
+            }
+            .addOnFailureListener { exception ->
+                Log.d(TAG, "Error getting documents: ", exception)
+            }.addOnCompleteListener {
+                if (productList.isNotEmpty()){
+                    loadedProductFromDB.value = productList[0]
+                }
+            }
+        //inside this collection check inside each document elements with artisanID and category
+        //if found add to the list of products
+        //if not found return empty list
+
+        return productList
+    }
 
 }
+
 
 suspend fun toDelay(time: Long) {
     delay(time)

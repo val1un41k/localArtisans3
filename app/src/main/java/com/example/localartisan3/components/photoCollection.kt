@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.storage
 
@@ -59,8 +60,11 @@ fun selectPhotoFromGallaryforProfile(uid: String) {
 
 @Composable
 
-fun selectPhotoFromGallaryforProduct(uid: String, productName: String){
-
+fun selectPhotoFromGallaryforProduct(productName: String,
+                                     productCategory: String,
+                                     onSucess: () -> Unit)
+{
+    var uid = Firebase.auth.currentUser!!.uid
     val context = LocalContext.current
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     val pickImageLauncher = rememberLauncherForActivityResult(
@@ -74,17 +78,24 @@ fun selectPhotoFromGallaryforProduct(uid: String, productName: String){
         Spacer(modifier = Modifier.height(10.dp))
     }
 
+
     imageUri.value?.let { uri ->
         // Display the selected image
         val image: Painter = rememberImagePainter(data = uri)
         Image(painter = image, contentDescription = "Selected Image")
 
-        Button(onClick = { uploadProductImageToFirebaseStorage(context, uri, uid, productName) }) {
-            Text("Upload Image")
+        Button(onClick = {
 
+            UploadPictureToTheStorage(
+            context = context, imageUri = uri,
+            productName = productName,
+            productCategory = productCategory) }) {
+            Text("Upload Image")
 
         }
     }
+    Log.d(TAG, "Product Image URL taken and passed  AGAIN: ${imageUri.value}")
+    onSucess()
 }
 
 
@@ -131,8 +142,14 @@ fun uploadProfileImageToFirebaseStorage(context: Context, imageUri: Uri, uid: St
     }
 }
 
-fun uploadProductImageToFirebaseStorage(context: Context, imageUri: Uri, uid: String, productCategory: String) {
-    // Get the image from the URI
+
+var productDownloadUri: Uri = Uri.EMPTY
+
+
+fun UploadPictureToTheStorage(context: Context, imageUri: Uri,
+                                        productName: String,productCategory: String){
+
+    var uid = Firebase.auth.currentUser!!.uid
     val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri)
     val baos = ByteArrayOutputStream()
     bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos)
@@ -141,7 +158,7 @@ fun uploadProductImageToFirebaseStorage(context: Context, imageUri: Uri, uid: St
     val storageRef = Firebase.storage.reference
 
     // Create a reference to the file you want to upload
-    val imageRef = storageRef.child("images/${uid}_${productCategory}_profile.jpg")
+    val imageRef = storageRef.child("images/${uid}_${productCategory}_${productName}.jpg")
 
     val uploadTask = imageRef.putBytes(data)
     uploadTask.addOnFailureListener {
@@ -150,26 +167,17 @@ fun uploadProductImageToFirebaseStorage(context: Context, imageUri: Uri, uid: St
         Toast.makeText(context, "Image upload failed", Toast.LENGTH_LONG).show()
     }.addOnSuccessListener { taskSnapshot ->
         // taskSnapshot.metadata contains file metadata such as size, content-type, etc.
-        Log.d(TAG, "Image uploaded successfully")
+        Log.d(TAG, "Product Image uploaded successfully")
         Toast.makeText(context, "Image uploaded successfully", Toast.LENGTH_LONG).show()
 
         // After a successful upload, get the download URL
+    }.addOnCompleteListener{
         imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
             // Now you have the download URL, you can store it in Firestore
-            val db = FirebaseFirestore.getInstance()
-            val docRef = db.collection("artisan_product_item_within_category").document(uid)
-
-            var update = hashMapOf(
-                "productImage" to downloadUri.toString()
-            )
-
-            docRef.update(update as Map<String, Any>)
-                .addOnSuccessListener {
-                    Log.d(TAG, "DocumentSnapshot successfully updated with image URL!")
-                }
-                .addOnFailureListener { e ->
-                    Log.w(TAG, "Error updating document", e)
-                }
+            productDownloadUri = downloadUri
+            Log.d(TAG, "Product Image URL tagen and passed: ${productDownloadUri}")
+        }.addOnFailureListener { e ->
+            Log.w(TAG, "Error taking download parameter of document", e)
         }
     }
 }

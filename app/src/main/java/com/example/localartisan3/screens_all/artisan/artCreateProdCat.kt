@@ -47,7 +47,9 @@ fun ArtisanCreateProductCategoryProfile(allArtisansScreensViewModel:
             var filteredCategories = ArrayList(categories.filterNot { it in
                     allArtisansScreensViewModel.artisanUIState.value.categories
             })
-            val selectedCategory = ArtisanCategoryDropdown(filteredCategories)
+            val selectedCategory = ArtisanCategoryDropdown(filteredCategories){
+                // do nothing here
+            }
             Spacer(modifier = Modifier.height(20.dp))
             ButtonComponent(value = "Create Category Record", onButtonClicked = {
                 allArtisansScreensViewModel.addCategoryforArtisan(selectedCategory)

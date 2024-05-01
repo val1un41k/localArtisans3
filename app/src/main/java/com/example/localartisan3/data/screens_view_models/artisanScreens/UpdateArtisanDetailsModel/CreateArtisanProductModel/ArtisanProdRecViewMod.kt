@@ -29,6 +29,11 @@ class CreateArtisanProductRecordViewModel : ViewModel()
                 artisanProductRecordUIstate.value.productPrice = event.productPrice
             }
 
+            is CreateArtisanProductUIEvent.ProductCategoryChanged -> {
+                artisanProductRecordUIstate.value.productCategory = event.productCategory
+            }
+
+
             is CreateArtisanProductUIEvent.ProductImageChanged -> {
                 artisanProductRecordUIstate.value.productImage = event.productImage
             }
@@ -54,6 +59,7 @@ class CreateArtisanProductRecordViewModel : ViewModel()
             }
 
 
+            else -> {}
         }
     }
     fun takeDataFromFirestoreOfArtisan(){
@@ -144,6 +150,7 @@ data class ArtisanProductRecordCreateUIstate(
 
     var qtyOnHand: Int = 0,
     var productImage: Uri? = null,
+    var productDownloadUri: Uri? = null,
 
 
     var artisanUID: String = "",

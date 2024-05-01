@@ -1,78 +1,76 @@
 package com.example.local_artisan.screens.screens_all.customer
 
+import android.content.Context
+import android.graphics.Bitmap
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
+import android.widget.Toast
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.local_artisan.components.ArtisanCategoryDropdown
 import com.example.local_artisan.components.HeadingTextComponentWithLogOut
 import com.example.local_artisan.components.ScreenNavigationDropdown
+import com.example.localartisan3.R
+import com.example.localartisan3.data.screens_view_models.cusotmerScreensViewModels.CusotmerSelectedProductItemEvent
 
 import com.example.localartisan3.data.screens_view_models.cusotmerScreensViewModels.CustomerMainViewModel
 import com.example.localartisan3.data.screens_view_models.users_data.ArtisanUIState
 import com.example.localartisan3.navigation.Screen
 import com.example.localartisan3.navigation.customerScreens
-import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.maps.android.compose.CameraPositionState
-import com.google.maps.android.compose.Circle
-import com.google.maps.android.compose.DragState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerInfoWindowContent
-import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
-import kotlinx.coroutines.launch
 
-private const val TAG = "CustomerHomeDashboardScreen"
+private var TAG = "CustomerHomeDashboardScreen"
 
-private val singapore = LatLng(1.35, 103.87)
-private val singapore2 = LatLng(1.40, 103.77)
-private val singapore3 = LatLng(1.45, 103.77)
+
 private val limerick = LatLng(52.66, -8.63)
 
-private val test2 = LatLng(52.65294374183368, -8.6150916562515)
-private val test1 = LatLng(52.6502269525512, -8.631892488864397)
+private val homeLocation = LatLng(52.658664940642296, -8.633123277485389)
 private val defaultCameraPosition = CameraPosition.fromLatLngZoom(limerick, 11f)
+
+var listOfProductsFromDB = mutableStateOf( ArrayList<LoadedProductFromDB>())
 
 
 
@@ -104,6 +102,7 @@ fun CustomerHomeDashboardScreen(customerMainViewModel: CustomerMainViewModel = v
 
                Box(Modifier.fillMaxSize()) {
                    GoogleMapView(
+                        customerMainViewModel = customerMainViewModel,
                        customerMainViewModel.artisanList.value,
                        modifier = Modifier.matchParentSize(),
                        cameraPositionState = cameraPositionState,
@@ -142,6 +141,7 @@ fun CustomerHomeDashboardScreenPreview(){
 
 @Composable
 fun GoogleMapView(
+    customerMainViewModel: CustomerMainViewModel = viewModel(),
     listOfArtisans: List<ArtisanUIState>,
     modifier: Modifier = Modifier,
     cameraPositionState: CameraPositionState = rememberCameraPositionState(),
@@ -179,23 +179,17 @@ fun GoogleMapView(
                 false
             }
             //TODO Create Function that will populate arrayOfArtisans as Markers
-            populateArtisansAsMarkers(listOfArtisans)
+            populateArtisansAsMarkers(customerMainViewModel ,listOfArtisans)
 
 
             Marker(
-                state = rememberMarkerState(position = test1),
+                state = rememberMarkerState(position = homeLocation),
                 draggable = true,
-                title = "Marker 1",
-                snippet = "Marker in Singapore",
-                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
+                title = "Current Location",
+                snippet = "Marker in Limerick",
+                icon = BitmapDescriptorFactory.fromResource(R.drawable.pin2),
             )
 
-            Marker( state = rememberMarkerState(position = test2),
-                draggable = true,
-                title = "Marker 1",
-                snippet = "Marker in Singapore",
-                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
-            )
             content()
         }
 
@@ -203,57 +197,198 @@ fun GoogleMapView(
 }
 
 @Composable
-fun populateArtisansAsMarkers(listOfArtisans: List<ArtisanUIState>){
+fun populateArtisansAsMarkers(customerMainViewModel: CustomerMainViewModel = viewModel(),
+    listOfArtisans: List<ArtisanUIState>){
     var TAG = "populateArtisansAsMarkers"
     listOfArtisans.forEach {artisan ->
-        //TODO Create Marker for each Artisan
+
         val position = LatLng(artisan.addressLongitude.toDouble(),artisan.addressLatitude.toDouble())
         Log.d(TAG, "Artisan: ${artisan.fname} ${artisan.lname} has position: $position")
 
         val markerState = rememberMarkerState(position = position)
-        val markerClick: (Marker) -> Boolean = {
-            Log.d(TAG, "${it.title} was clicked")
-           // clickedMarkerInfoWindowContent(artisan)
-            false
-        }
-        Marker(
-            state = markerState,
-            title = artisan.fname + "   " + artisan.lname,
-            onClick = markerClick,
-            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+
+        val icon = bitmapDescriptorFromVector(
+            LocalContext.current, R.drawable.pin
         )
+
+        MarkerInfoWindow(
+            state = markerState,
+            icon = icon,
+        ) { marker ->
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        shape = RoundedCornerShape(35.dp, 35.dp, 35.dp, 35.dp)
+                    ),
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    Image(
+                        painter = painterResource(id = R.drawable.map),
+                        //TODO take image from firestore artisan_Profile
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .height(80.dp)
+                            .fillMaxWidth(),
+
+                        )
+
+                    ClickedMarkerInfoWindowContent(artisan)
+
+                    //TODO add Event on Category Changed
+                    customerMainViewModel.onEvent(CusotmerSelectedProductItemEvent
+                        .SelectedProductArtsanProductCategoryChanged(
+                    ArtisanCategoryDropdown(artisan.categories) {
+                       //create popped up windows related to the products inside
+                   // category of the artisan
+                    }
+                        ))
+                    if (listOfProductsFromDB.value.isNullOrEmpty()) {
+                        Toast.makeText(LocalContext.current, "No Products Found" +
+                                "\n please try another category" +
+                                "\n or another craft maker", Toast.LENGTH_SHORT).show()
+                    }else{
+
+                        //TODO Create IVENT on Category Selected
+
+
+                        //Create Popped Window of Artisan`s products
+                        //     PoppedUpWindowOfArtisansProducts(artisan, selectedCategoryOfArtisan.value)
+                    }
+
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    //.........................Text : description
+                    Text(
+                        text = "Customizing a marker's info window",
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(top = 10.dp, start = 25.dp, end = 25.dp)
+                            .fillMaxWidth(),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    //.........................Spacer
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                }
+
+            }
+
+        }
         Log.d(TAG, "Marker: ${artisan.fname} ${artisan.lname} has been created")
     }
 }
 
-
 @Composable
-fun clickedMarkerInfoWindowContent(artisan: ArtisanUIState){
+fun PoppedUpWindowOfArtisansProducts(artisan: ArtisanUIState, category: String) {
 
-    //TODO Creating popped up window for clicked marker
-    Column(
-        modifier = Modifier.padding(8.dp)
-    ){
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .background(Color.Gray)
-        ) {
-            Text(text = "Artisan Name: ${artisan.fname} ${artisan.lname}")
-            Text(text = "Artisan Address: ${artisan.address}")
-            Text(text = "Artisan Phone Number: ${artisan.pnum}")
-            Text(text = "Artisan Email: ${artisan.email}")
-        }
-        Spacer(modifier = Modifier.height(5.dp))
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .background(Color.Gray)
-        ){
-            //TODO DropDown Menu from having product categories
+   Box(
+       modifier = Modifier.fillMaxSize(),
+   )
+   {
+       Column(){
 
-        }
-    }
+       }
+   }
+
+   // TakingDataFromFirestoreToPopulateProducts(artisan, category)
+
 }
 
 
+@Composable
+fun ClickedMarkerInfoWindowContent(artisan: ArtisanUIState){
+    //.........................Spacer
+    Spacer(modifier = Modifier.height(24.dp))
+    //.........................Text: title
+    Text(
+        text = "Artisan name: ${artisan.fname} ${artisan.lname}" +
+                "\n" +
+                "\n Artisan Address: ${artisan.address}" +
+                "\n" +
+                "\n Artisan Phone Number: ${artisan.pnum}" +
+                "\n" +
+                "\n Artisan Email: ${artisan.email}" +
+                "\n",
+        textAlign = TextAlign.Left,
+        modifier = Modifier
+            .padding(top = 10.dp)
+            .fillMaxWidth(),
+        style = MaterialTheme.typography.headlineSmall,
+        color = MaterialTheme.colorScheme.primary,
+    )
+}
+
+fun TakingDataFromFirestoreToPopulateProducts(){
+
+}
+
+
+fun bitmapDescriptorFromVector(
+    context: Context,
+    vectorResId: Int
+): BitmapDescriptor? {
+
+    // retrieve the actual drawable
+    val drawable = ContextCompat.getDrawable(context, vectorResId) ?: return null
+    drawable.setBounds(0, 0, drawable.intrinsicWidth, drawable.intrinsicHeight)
+    val bm = Bitmap.createBitmap(
+        drawable.intrinsicWidth,
+        drawable.intrinsicHeight,
+        Bitmap.Config.ARGB_8888
+    )
+
+    // draw it onto the bitmap
+    val canvas = android.graphics.Canvas(bm)
+    drawable.draw(canvas)
+    return BitmapDescriptorFactory.fromBitmap(bm)
+}
+
+data class LoadedProductFromDB(
+    var productID: String = "",
+    var artisanName: String = "",
+    var artisanSurname: String = "",
+    var artisanID: String = "",
+    var productName: String = "",
+    var productDescription: String = "",
+    var productPrice: Double = 0.0,
+    var productDiscountPrice: Double = 0.0,
+    var productImage: String = "",
+    var productCategory: String = "",
+    var qtyOnHand: Int = 0
+
+
+
+)
+
+data class CustomerSelectedProductItem(
+
+    var customerID: String = "",
+    var artisanID: String = "",
+    var artisanProductCategory: String = "",
+    var artisanProductItemID: String = "",
+    var artisanProductItemName: String = "",
+    var artisanProductItemDescription: String = "",
+    var artisanProductItemPrice: Double = 0.0,
+    var artisanProductItemDiscountPrice: Double = 0.0,
+    var artisanProductItemDownloadUri: String = "",
+
+    var quantityRequested: Int = 0,
+    var requestedTotal: Double = 0.0,  // var requestedTotal: Double = 0.0, requestQuantity * productPrice
+)
+
+data class CustomerRequestForArtisansProductItem(
+    var customerRequestId: String = "",
+    var customerID: String = "",
+    var artisanID: String = "",
+    var artisanProductItemID: String = "",
+    var quantityRequested: Int = 0,
+    var requestedTotal: Double = 0.0,  // var requestedTotal: Double = 0.0, requestQuantity * productPrice
+    var requestStatus: String = ""
+)

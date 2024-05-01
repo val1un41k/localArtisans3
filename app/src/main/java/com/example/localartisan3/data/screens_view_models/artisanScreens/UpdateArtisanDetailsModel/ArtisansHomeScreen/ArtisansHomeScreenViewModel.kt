@@ -4,12 +4,14 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.example.localartisan3.components.productDownloadUri
 import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.CreateArtisanProductModel.CreateArtisanProductUIEvent
 import com.example.localartisan3.data.screens_view_models.users_data.ArtisanUIState
 import com.example.localartisan3.navigation.LocalArtisansRouter
 import com.example.localartisan3.navigation.Screen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.StorageReference
 
 class AllArtisansScreensViewModel : ViewModel(){
 
@@ -74,24 +76,48 @@ class AllArtisansScreensViewModel : ViewModel(){
     fun onEvent(event: CreateArtisanProductUIEvent){
         when(event){
             is CreateArtisanProductUIEvent.ProductNameChanged -> {
-                artisanProductRecordUIstate.value.productName = event.productName
+                artisanProductRecordUIstate.value = artisanProductRecordUIstate.value.copy(
+                    productName = event.productName
+                )
             }
             is CreateArtisanProductUIEvent.ProductDescriptionChanged -> {
-                artisanProductRecordUIstate.value.productDescription = event.productDescription
+                artisanProductRecordUIstate.value = artisanProductRecordUIstate.value.copy(
+                    productDescription = event.productDescription)
             }
             is CreateArtisanProductUIEvent.ProductPriceChanged -> {
-                artisanProductRecordUIstate.value.productPrice = event.productPrice
+                artisanProductRecordUIstate.value = artisanProductRecordUIstate.value.copy(
+                    productPrice =  event.productPrice
+                )
+            }
+
+            is CreateArtisanProductUIEvent.ProductCategoryChanged -> {
+                artisanProductRecordUIstate.value = artisanProductRecordUIstate.value.copy(
+                    productCategory = event.productCategory)
             }
 
             is CreateArtisanProductUIEvent.ProductImageChanged -> {
-                artisanProductRecordUIstate.value.productImage = event.productImage
+                artisanProductRecordUIstate.value = artisanProductRecordUIstate.value.copy(
+                    productImage = event.productImage
+                )
             }
             is CreateArtisanProductUIEvent.ProductCreateRecordButtonClicked -> {
                 createNewProductRecordInFirebase()
 
             }
             is CreateArtisanProductUIEvent.NextProductRecordItemButtonClicked -> {
-                clearEntryFields()
+                artisanProductRecordUIstate.value = artisanProductRecordUIstate.value.copy(
+                    productName = "",
+                    productDescription = "",
+                    productPrice = 0.0,
+                    productDiscountPrice = 0.0,
+                    productCategory = "",
+                    qtyOnHand = 0,
+                    productImage = null
+                )
+                //TODO
+
+                //hot to make all events to have entered
+                //
             }
             is CreateArtisanProductUIEvent.BackToDashboardButtonClicked -> {
                 //TODO Navigate back to dashboard
@@ -106,8 +132,6 @@ class AllArtisansScreensViewModel : ViewModel(){
             is CreateArtisanProductUIEvent.DataFetchedFromFirestore -> {
 
             }
-
-
         }
     }
     fun takeDataFromFirestoreOfArtisan(){
@@ -147,13 +171,13 @@ class AllArtisansScreensViewModel : ViewModel(){
             "product_description" to artisanProductRecordUIstate.value.productDescription,
             "product_price" to artisanProductRecordUIstate.value.productPrice,
             "product_discount_price" to artisanProductRecordUIstate.value.productDiscountPrice,
-            "product_category" to "pottery",
+            "product_category" to artisanProductRecordUIstate.value.productCategory,
             //artisanProductRecordUIstate.productCategory,
             "qty_on_hand" to artisanProductRecordUIstate.value.qtyOnHand,
             "artisan_uid" to uid,
             "artisan_name" to artisanProductRecordUIstate.value.artisanName,
             "artisan_surname" to artisanProductRecordUIstate.value.artisanSurname,
-
+            "product_picture" to productDownloadUri.toString()
             )
 
         docRef.add(newProductRecord)
@@ -208,6 +232,8 @@ data class ArtisanProductRecordCreateUIstate(
 
     var qtyOnHand: Int = 0,
     var productImage: Uri? = null,
+
+    var productDownloadUri: Uri? = null,
     var artisanUID: String = "",
     var artisanName: String = "",
     var artisanSurname: String = "",

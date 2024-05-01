@@ -12,7 +12,9 @@ sealed class CreateArtisanProductUIEvent {
 
     data class ProductDiscountChanged(val productDiscount: Double) : CreateArtisanProductUIEvent()
 
-    data class ProductImageChanged(val productImage: Uri?) : CreateArtisanProductUIEvent()
+    data class ProductImageChanged(val productImage: Uri) : CreateArtisanProductUIEvent()
+
+    data class ProductCategoryChanged(val productCategory: String) : CreateArtisanProductUIEvent()
 
     class QtyOnHandChanged (val qtyOnHand: Int) : CreateArtisanProductUIEvent()
 

@@ -11,6 +11,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -37,9 +39,7 @@ fun ArtisansCreateProductWithinCategory(createArtisanProductRecordViewModel:
  //createArtisanProductRecordViewModel.takeDataFromFirestoreOfArtisan()
 
     createArtisanProductRecordViewModel.passDataToCreateProductRecord()
-
-
-        var oneclickCreateProfile = false
+        var oneclickCreateProfile = remember { mutableStateOf(false)}
 
         Surface(
             Modifier
@@ -70,8 +70,13 @@ fun ArtisansCreateProductWithinCategory(createArtisanProductRecordViewModel:
                         createArtisanProductRecordViewModel.
                         artisanProductRecordUIstate.
                         value.artisanProductCategories
-                                  var selectedCategory =ArtisanCategoryDropdown(categories)
 
+                    createArtisanProductRecordViewModel.onEvent(
+                        CreateArtisanProductUIEvent.ProductCategoryChanged(
+                            ArtisanCategoryDropdown(categories){
+                                //do nothing here
+                            }
+                        ))
 
                 }
                 item {
@@ -88,6 +93,7 @@ fun ArtisansCreateProductWithinCategory(createArtisanProductRecordViewModel:
                         labelValue = "Product Item Description",
                         painterResource(R.drawable.profile),
                         onTextChanged = {
+
                             createArtisanProductRecordViewModel.onEvent(
                                 CreateArtisanProductUIEvent.ProductDescriptionChanged(it)
                             )
@@ -102,8 +108,10 @@ fun ArtisansCreateProductWithinCategory(createArtisanProductRecordViewModel:
                                 labelValue = "Product Item Price (EUR)",
                                 painterResource(R.drawable.profile),
                                 onTextChanged = {
+                                        input ->
+                                    val number = input.toDoubleOrNull()?:0.0
                                     createArtisanProductRecordViewModel.onEvent(
-                                        CreateArtisanProductUIEvent.ProductPriceChanged(it.toDouble())
+                                        CreateArtisanProductUIEvent.ProductPriceChanged(number)
                                     )
                                 },
                             )
@@ -115,8 +123,11 @@ fun ArtisansCreateProductWithinCategory(createArtisanProductRecordViewModel:
                             labelValue = "Discounted Price (EUR)",
                             painterResource(R.drawable.profile),
                             onTextChanged = {
+                                //how to accept only numbers
+                                input ->
+                                val number = input.toDoubleOrNull()?:0.0
                                 createArtisanProductRecordViewModel.onEvent(
-                                    CreateArtisanProductUIEvent.ProductDiscountChanged(it.toDouble())
+                                    CreateArtisanProductUIEvent.ProductDiscountChanged(number)
                                 )
                             },
                         )
@@ -126,32 +137,37 @@ fun ArtisansCreateProductWithinCategory(createArtisanProductRecordViewModel:
                 item {
                     Spacer(modifier = Modifier.height(10.dp))
                     Text("Product Quantity on hand")
-                    createArtisanProductRecordViewModel
-                        .artisanProductRecordUIstate.value.qtyOnHand = IntegerDropdown()
-
+                    createArtisanProductRecordViewModel.onEvent(
+                        CreateArtisanProductUIEvent.QtyOnHandChanged(IntegerDropdown())
+                    )
                 }
 
                 item {
                     Spacer(modifier = Modifier.height(10.dp))
 
                    //TODO ProductItemPicture Upload
+
                     selectPhotoFromGallaryforProduct(
-                        createArtisanProductRecordViewModel.artisanProductRecordUIstate.value
-                            .artisanUID,
-                        createArtisanProductRecordViewModel.artisanProductRecordUIstate.value.productCategory
-                    )
+                                productCategory =
+                                createArtisanProductRecordViewModel.artisanProductRecordUIstate.value.productCategory,
+                                productName =
+                                createArtisanProductRecordViewModel.artisanProductRecordUIstate.value.productName,
+                            ){
+                        oneclickCreateProfile.value = true
+                    }
 
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
                 item {
                     Spacer(modifier = Modifier.height(10.dp))
-                    ButtonComponent(value = "Create Product Item Record", onButtonClicked = {
+                    ButtonComponent(
+                        value = "Create Product Item Record", onButtonClicked = {
                         createArtisanProductRecordViewModel.onEvent(
                             CreateArtisanProductUIEvent.ProductCreateRecordButtonClicked
                         )
-                        oneclickCreateProfile = true
-                    }, isEnabled = !oneclickCreateProfile)
+                            oneclickCreateProfile.value = false
+                    }, isEnabled = oneclickCreateProfile.value)
                 }
 
                 item {
@@ -160,8 +176,10 @@ fun ArtisansCreateProductWithinCategory(createArtisanProductRecordViewModel:
                     ButtonComponent(value = "Next Product Item", onButtonClicked = {
                         createArtisanProductRecordViewModel.onEvent(
                             CreateArtisanProductUIEvent.NextProductRecordItemButtonClicked
+                            //remove the data from the fields
                         )
-                        oneclickCreateProfile = false
+                        createArtisanProductRecordViewModel.clearEntryFields()
+                        oneclickCreateProfile.value = false
                     })
                 }
                 item {
