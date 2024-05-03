@@ -32,6 +32,7 @@ import com.example.local_artisan.components.MyTextFieldComponent
 import com.example.localartisan3.R
 
 import com.example.localartisan3.components.selectPhotoFromGallaryforProfile
+import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.AllArtisansScreensViewModel
 import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.UpdateAartisansDetailsViewModel
 import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.UpdateArtisanDetailsUIEvent
 import com.example.localartisan3.ui.theme.Primary
@@ -39,11 +40,9 @@ import com.example.localartisan3.ui.theme.Primary
 
 @Composable
 fun UpdateArtisansPersonalDetails(
-    updateAartisansDetailsViewModel: UpdateAartisansDetailsViewModel = viewModel()
+    updateAartisansDetailsViewModel: AllArtisansScreensViewModel = viewModel()
 
 ) {
-    updateAartisansDetailsViewModel
-        .takingDataFromFirestoreAndPlaceToValuesOfArtisanUIState()
 
     Surface(
         Modifier
@@ -65,14 +64,15 @@ fun UpdateArtisansPersonalDetails(
             item {
                 DisplayOnlyTextField(
                     "Artisan Account Name", updateAartisansDetailsViewModel
-                        .artisanUIState.value.email
+                        .updateArtisanUIState.value.email
                 )
             }
             item {
 
                 Row() {
                     Column() {
-                        MyTextFieldComponent(labelValue = updateAartisansDetailsViewModel.artisanUIState.value.fname,
+                        MyTextFieldComponent(labelValue = updateAartisansDetailsViewModel.
+                        updateArtisanUIState.value.fname,
                             painterResource(R.drawable.profile),
                             onTextChanged = {
                                 updateAartisansDetailsViewModel.onEvent(
@@ -80,7 +80,8 @@ fun UpdateArtisansPersonalDetails(
                                 )
                             })
 
-                        MyTextFieldComponent(labelValue = updateAartisansDetailsViewModel.artisanUIState.value.lname,
+                        MyTextFieldComponent(labelValue = updateAartisansDetailsViewModel.
+                        updateArtisanUIState.value.lname,
                             painterResource(R.drawable.profile),
                             onTextChanged = {
                                 updateAartisansDetailsViewModel.onEvent(
@@ -103,7 +104,8 @@ fun UpdateArtisansPersonalDetails(
                 Spacer(modifier = Modifier.height(5.dp))
                 Row() {
                     Column() {
-                        MyTextFieldComponent(labelValue = updateAartisansDetailsViewModel.artisanUIState.value.pnum,
+                        MyTextFieldComponent(labelValue = updateAartisansDetailsViewModel
+                            .updateArtisanUIState.value.pnum,
                             painterResource(androidx.core.R.drawable.ic_call_answer),
                             onTextChanged = {
                                 updateAartisansDetailsViewModel.onEvent(
@@ -121,7 +123,7 @@ fun UpdateArtisansPersonalDetails(
 
                 Text(
                     text = updateAartisansDetailsViewModel
-                        .artisanUIState.value.phoneNumValidateMessage,
+                        .updateArtisanUIState.value.phoneNumValidateMessage,
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(),
@@ -154,7 +156,7 @@ fun UpdateArtisansPersonalDetails(
                     Column() {
                         //TODO Create button that will do make option update from directory.
                         selectPhotoFromGallaryforProfile(
-                            updateAartisansDetailsViewModel.artisanUIState.value.artisanID
+                            updateAartisansDetailsViewModel.updateArtisanUIState.value.artisanID
                         )
                     }
                 }
@@ -178,7 +180,7 @@ fun UpdateArtisansPersonalDetails(
                 )
                     Column() {
                         Spacer(modifier = Modifier.height(5.dp))
-                        MyTextFieldComponent(labelValue = "address",
+                        MyTextFieldComponent(labelValue = updateAartisansDetailsViewModel.updateArtisanUIState.value.address,
                             painterResource(R.drawable.message),
                             onTextChanged = {
                                 updateAartisansDetailsViewModel.onEvent(
@@ -186,7 +188,8 @@ fun UpdateArtisansPersonalDetails(
                                 )
                             })
                         Spacer(modifier = Modifier.height(5.dp))
-                        MyTextFieldComponent(labelValue = "address Longitude",
+                        MyTextFieldComponent(labelValue = updateAartisansDetailsViewModel
+                            .updateArtisanUIState.value.addressLongitude,
                             painterResource(R.drawable.message),
                             onTextChanged = {
                                 updateAartisansDetailsViewModel.onEvent(
@@ -196,7 +199,8 @@ fun UpdateArtisansPersonalDetails(
                                 )
                             })
                         Spacer(modifier = Modifier.height(5.dp))
-                        MyTextFieldComponent(labelValue = "address Latitude",
+                        MyTextFieldComponent(labelValue = updateAartisansDetailsViewModel
+                            .updateArtisanUIState.value.addressLatitude,
                             painterResource(R.drawable.message),
                             onTextChanged = {
                                 updateAartisansDetailsViewModel.onEvent(

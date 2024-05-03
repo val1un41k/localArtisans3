@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.ProductCategory
 import com.example.localartisan3.navigation.LocalArtisansRouter
 import com.example.localartisan3.navigation.Screen
 import com.google.firebase.auth.FirebaseAuth
@@ -132,7 +133,7 @@ class CreateArtisanProductRecordViewModel : ViewModel()
         artisanProductRecordUIstate.value.productDescription = ""
         artisanProductRecordUIstate.value.productPrice = 0.0
         artisanProductRecordUIstate.value.productDiscountPrice = 0.0
-        artisanProductRecordUIstate.value.productCategory = ""
+        artisanProductRecordUIstate.value.productCategory = ProductCategory("","")
         artisanProductRecordUIstate.value.qtyOnHand = 0
         artisanProductRecordUIstate.value.productImage = null
     }
@@ -146,7 +147,7 @@ data class ArtisanProductRecordCreateUIstate(
     var productPrice: Double = 0.0,
     var productDiscountPrice: Double = 0.0,
     var artisanProductCategories: ArrayList<String> = ArrayList(),
-    var productCategory: String = "",
+    var productCategory: ProductCategory = ProductCategory("",""),
 
     var qtyOnHand: Int = 0,
     var productImage: Uri? = null,

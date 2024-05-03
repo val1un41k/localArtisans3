@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.local_artisan.components.ArtisanCategoryDropdown
@@ -19,14 +20,16 @@ import com.example.local_artisan.components.DisplayOnlyTextField
 import com.example.local_artisan.components.HeadingTextComponentWithLogOut
 
 import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.AllArtisansScreensViewModel
+import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.ProductCategory
 import com.example.localartisan3.navigation.LocalArtisansRouter
 import com.example.localartisan3.navigation.Screen
 
 
 @Composable
 fun ArtisanCreateProductCategoryProfile(allArtisansScreensViewModel:
-                                        AllArtisansScreensViewModel = viewModel()
+                                        AllArtisansScreensViewModel = viewModel(),
 ){
+    var context = LocalContext.current
     Surface(
         Modifier
             .fillMaxSize()
@@ -41,19 +44,26 @@ fun ArtisanCreateProductCategoryProfile(allArtisansScreensViewModel:
             DisplayOnlyTextField("Artisan`s Name & Surname",
                 allArtisansScreensViewModel.artisanUIState.value.fname +
                         " " + allArtisansScreensViewModel.artisanUIState.value.lname)
-            Spacer(modifier = Modifier.height(20.dp))
-            var categories: ArrayList <String> = ArrayList()
-            categories = arrayListOf("Pottery", "Paintings", "Sculptures", "Jewelery", "Decorations")
-            var filteredCategories = ArrayList(categories.filterNot { it in
-                    allArtisansScreensViewModel.artisanUIState.value.categories
-            })
-            val selectedCategory = ArtisanCategoryDropdown(filteredCategories){
-                // do nothing here
-            }
+
+                var categoriesToDisplay = ""
+                allArtisansScreensViewModel.artisanUIState
+                    .value.categories.forEach { category ->
+                    categoriesToDisplay += category.ProdCatName + " \n"}
+
+            DisplayOnlyTextField("Artisan`s Already Existing Product Categories",
+                categoriesToDisplay)
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+              val selectedCategory = ArtisanCategoryDropdown(allArtisansScreensViewModel.
+              availableCategories.value){
+
+           }
+
             Spacer(modifier = Modifier.height(20.dp))
             ButtonComponent(value = "Create Category Record", onButtonClicked = {
                 allArtisansScreensViewModel.addCategoryforArtisan(selectedCategory)
-                allArtisansScreensViewModel.UpdateCategoriesStateInFirestore()
+               allArtisansScreensViewModel.UpdateCategoriesStateInFirestore(context)
 
             })
             Text(allArtisansScreensViewModel.UpdateCategoryMessage.value)

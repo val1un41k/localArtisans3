@@ -75,8 +75,11 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.local_artisan.screens.screens_all.customer.LoadedProductFromDB
 import com.example.localartisan3.R
 import com.example.localartisan3.data.NavigationItem
+import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.ProductCategory
+import com.example.localartisan3.data.screens_view_models.users_data.CategoriesWithProducts
 import com.example.localartisan3.navigation.LocalArtisansRouter
 import com.example.localartisan3.navigation.Screen
 import com.example.localartisan3.ui.theme.AccentColor
@@ -791,10 +794,10 @@ fun logoutButton( onButtonClicked: () -> Unit){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ArtisanCategoryDropdown(elements: ArrayList<String>,
-                            onCategorySelected: () -> Unit): String {
+fun ArtisanCategoryDropdown(elements: ArrayList<ProductCategory>,
+                            onCategorySelected: () -> Unit): ProductCategory {
     var expanded by remember { mutableStateOf(false) }
-    var selectedCategory by remember { mutableStateOf(elements[0]) }
+    var selectedCategory by remember { mutableStateOf(elements.get(0)) }
 
     Column() {
         Box(modifier = Modifier.wrapContentSize()) {
@@ -805,7 +808,7 @@ fun ArtisanCategoryDropdown(elements: ArrayList<String>,
 
                 TextField(
                     modifier = Modifier.menuAnchor(),
-                    value = selectedCategory,
+                    value = selectedCategory.ProdCatName,
                     onValueChange = { },
                     readOnly = true,
                     trailingIcon = {
@@ -824,7 +827,7 @@ fun ArtisanCategoryDropdown(elements: ArrayList<String>,
                                 selectedCategory = category
                                 expanded = false
                             }) {
-                                Text(text = category)
+                                Text(text = category.ProdCatName)
                             }
                         }
                     }
@@ -836,6 +839,105 @@ fun ArtisanCategoryDropdown(elements: ArrayList<String>,
     return selectedCategory
     onCategorySelected()
 }
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ArtisanCategoryWithProductsDropdown(elements: ArrayList<CategoriesWithProducts>,
+                                        onCategorySelected: () -> Unit): CategoriesWithProducts {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedCategory by remember { mutableStateOf(elements.get(0)) }
+
+    Column() {
+        Box(modifier = Modifier.wrapContentSize()) {
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }) {
+
+                TextField(
+                    modifier = Modifier.menuAnchor(),
+                    value = selectedCategory.prodCatName,
+                    onValueChange = { },
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = !expanded }) {
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                    ) {
+                        elements.forEach { category ->
+                            DropdownMenuItem(onClick = {
+                                selectedCategory = category
+                                expanded = false
+                            }) {
+                                Text(text = category.prodCatName)
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+    return selectedCategory
+    onCategorySelected()
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SelectedProductDropdown(elements: ArrayList<LoadedProductFromDB>,
+                            onProductSelected: @Composable () -> Unit): LoadedProductFromDB {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedProduct by remember { mutableStateOf(elements[0]) }
+
+    Column() {
+        Box(modifier = Modifier.wrapContentSize()) {
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }) {
+
+                TextField(
+                    modifier = Modifier.menuAnchor(),
+                    value = selectedProduct.product_name,
+                    onValueChange = { },
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = !expanded }) {
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                    ) {
+                        elements.forEach { product ->
+                            DropdownMenuItem(onClick = {
+                                selectedProduct = product
+                                expanded = false
+                            }) {
+                                Text(text = product.product_name)
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+    return selectedProduct
+    onProductSelected()
+}
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -880,6 +982,51 @@ fun IntegerDropdown(): Int {
         }
     }
     return selectedNumber
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SelectQuantityOfProductDropdown(qunatityOfProducts: Int) : Int{
+var expanded by remember { mutableStateOf(false) }
+val numbers = (1..qunatityOfProducts).toList()
+var selectedNumber by remember { mutableStateOf(numbers[0]) }
+
+Column() {
+    Box(modifier = Modifier.wrapContentSize()) {
+        Text(
+            text = selectedNumber.toString(),
+            modifier = Modifier.clickable { expanded = true }
+        )
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            TextField(
+                modifier = Modifier.menuAnchor(),
+                value = selectedNumber.toString(),
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                },
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = !expanded }) {
+
+                numbers.forEach { number ->
+                    DropdownMenuItem(onClick = {
+                        selectedNumber = number
+                        expanded = false
+                    }) {
+                        Text(text = number.toString())
+                    }
+                }
+            }
+        }
+    }
+}
+return selectedNumber
 }
 
 

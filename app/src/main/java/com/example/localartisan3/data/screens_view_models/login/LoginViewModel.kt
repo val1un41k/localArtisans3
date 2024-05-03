@@ -143,7 +143,6 @@ class LoginViewModel : ViewModel() {
                     )
                     checkArtisanLoginInFirestore()
 
-                    checkIfArtisanLoginFirstTime()
                 }
             }
             .addOnFailureListener {
@@ -175,6 +174,7 @@ class LoginViewModel : ViewModel() {
                             LocalArtisansRouter.navigateTo(Screen.UpdateArtisansPersonalDetails)
                         }
                         else{
+
                             LocalArtisansRouter.navigateTo(Screen.ArtisanHomeScreen)
                         }
 
@@ -328,6 +328,8 @@ class LoginViewModel : ViewModel() {
                         )
                     }
 
+                }.addOnCompleteListener {
+                    checkIfArtisanLoginFirstTime()
                 }
         }
 

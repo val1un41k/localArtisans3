@@ -65,6 +65,8 @@ class UpdateAartisansDetailsViewModel : ViewModel()  {
                 
                 printState()
             }
+
+            else -> {}
         }
         validateUpdateArtisanDetailsUIDataWithRules()
     }

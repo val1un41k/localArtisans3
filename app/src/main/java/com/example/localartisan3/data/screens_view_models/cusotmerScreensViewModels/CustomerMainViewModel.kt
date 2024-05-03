@@ -3,32 +3,43 @@ package com.example.localartisan3.data.screens_view_models.cusotmerScreensViewMo
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 
 import com.example.local_artisan.screens.screens_all.customer.CustomerSelectedProductItem
 import com.example.local_artisan.screens.screens_all.customer.LoadedProductFromDB
-import com.example.local_artisan.screens.screens_all.customer.listOfProductsFromDB
+
 import com.example.localartisan3.data.rules.Validator
 import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.ArtisanProductRecordCreateUIstate
+import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.ProductCategory
 import com.example.localartisan3.data.screens_view_models.login.LoginUIEvent
 import com.example.localartisan3.data.screens_view_models.login.LoginUIState
+import com.example.localartisan3.data.screens_view_models.users_data.ArtisanToPutOnMarkers
 import com.example.localartisan3.data.screens_view_models.users_data.ArtisanUIState
+import com.example.localartisan3.data.screens_view_models.users_data.CategoriesWithProducts
 import com.example.localartisan3.data.screens_view_models.users_data.Customer
 import com.example.localartisan3.navigation.LocalArtisansRouter
 import com.example.localartisan3.navigation.Screen
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
-class CustomerMainViewModel : ViewModel(){
+class CustomerMainViewModel : ViewModel() {
 
-    private val TAG =CustomerMainViewModel::class.simpleName
+    private val TAG = CustomerMainViewModel::class.simpleName
+
+    var db = FirebaseFirestore.getInstance()
 
     var loginUIState = mutableStateOf(LoginUIState())
 
@@ -46,7 +57,7 @@ class CustomerMainViewModel : ViewModel(){
 
     var passwordValidationMessage = mutableStateOf("")
 
-    var artisanList = mutableStateOf(ArrayList<ArtisanUIState>())
+    var artisanList = mutableStateOf(ArrayList<ArtisanToPutOnMarkers>())
 
     val selectedArtisan = mutableStateOf(ArtisanUIState())
 
@@ -63,6 +74,7 @@ class CustomerMainViewModel : ViewModel(){
                     emailValidationError = emailValidationMessage.value
                 )
             }
+
             is LoginUIEvent.PasswordChanged -> {
                 passwordValidationMessage.value = validatePassword(event.password)
                 loginUIState.value = loginUIState.value.copy(
@@ -70,23 +82,26 @@ class CustomerMainViewModel : ViewModel(){
                     passwordValidationError = passwordValidationMessage.value
                 )
             }
+
             is LoginUIEvent.ConfirmPasswordChanged -> {
                 loginUIState.value = loginUIState.value.copy(
                     confirmPassword = event.confirmPassword
                 )
             }
+
             is LoginUIEvent.LoginButtonClicked -> {
                 login()
-                    GlobalScope.launch {
-                        toDelay(time = 3000)
-                        withContext(Dispatchers.Main) {
+                GlobalScope.launch {
+                    toDelay(time = 3000)
+                    withContext(Dispatchers.Main) {
 
-                        }
                     }
+                }
 
             }
+
             is LoginUIEvent.ArtisanLoginButtonClicked -> {
-             "   artisanLogin()"
+                "   artisanLogin()"
             }
 
             is LoginUIEvent.UserRoleChanged -> {
@@ -94,18 +109,23 @@ class CustomerMainViewModel : ViewModel(){
                     userRole = "Customer"
                 )
             }
+
             is LoginUIEvent.CustomerExists -> {
                 loginUIState.value = loginUIState.value.copy(
                     customerExists = event.customerExists
                 )
             }
+
             is LoginUIEvent.ResetPasswrodButtonClicked -> {
                 sendPasswordResetEmail(loginUIState.value.email)
             }
+
+            else -> {}
         }
         validateLoginUIDataWithRules()
 
     }
+
     private fun validateLoginUIDataWithRules() {
         val emailResult = Validator.validateEmail(
             email = loginUIState.value.email
@@ -121,6 +141,7 @@ class CustomerMainViewModel : ViewModel(){
         allValidationsPassed.value = emailResult.status && passwordResult.status
 
     }
+
     fun login() {
         loginInProgress.value = true
         val email = loginUIState.value.email
@@ -141,7 +162,7 @@ class CustomerMainViewModel : ViewModel(){
                 Log.d(TAG, "${it.localizedMessage}")
                 LoginErrorMessage.value = "Invalied Email or Password"
                 loginInProgress.value = false
-            }.addOnCompleteListener { checkCustomerLoginInFirestore()  }
+            }.addOnCompleteListener { checkCustomerLoginInFirestore() }
 
     }
 
@@ -169,8 +190,8 @@ class CustomerMainViewModel : ViewModel(){
         }
 
         return passwordValidationMessage.toString()
-    }
 
+    }
 
 
     fun validateEmail(email: String): String {
@@ -185,9 +206,9 @@ class CustomerMainViewModel : ViewModel(){
             || !email.contains(".ie")
             || !email.contains(".org")
             || !email.contains(".net")
-            ||  !email.contains(".gov")
+            || !email.contains(".gov")
             || !email.contains(".edu")
-        ){
+        ) {
             emailValidationMessage.append("Email must contain proper ending")
         }
 
@@ -196,14 +217,18 @@ class CustomerMainViewModel : ViewModel(){
             || !email.contains("hotmail")
             || !email.contains("outlook")
             || !email.contains("icloud")
-            || !email.contains("live")) {
-            emailValidationMessage.append("Email must contain proper domain \n" +
-                    "like google yahoo hotmail outlook icloud live.\n")
+            || !email.contains("live")
+        ) {
+            emailValidationMessage.append(
+                "Email must contain proper domain \n" +
+                        "like google yahoo hotmail outlook icloud live.\n"
+            )
         }
         return emailValidationMessage.toString()
     }
 
-    fun checkCustomerLoginInFirestore()  {
+    @OptIn(DelicateCoroutinesApi::class)
+    fun checkCustomerLoginInFirestore() {
 
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         Log.d(TAG, "UID = $uid")
@@ -228,12 +253,17 @@ class CustomerMainViewModel : ViewModel(){
                         Log.d(TAG, "Customer Data: ${customerUiState.value}")
                         //populate list of Artisans
 
+                        GlobalScope.launch {  populateArtisans(db)}
+
+
                         Log.d(TAG, "Artisan List: ${artisanList.value}")
 
                         //navigate to Customer Home Screen
-                //        LocalArtisansRouter.navigateTo(Screen.CustomerHomeDashboardScreen)
+                        //        LocalArtisansRouter.navigateTo(Screen.CustomerHomeDashboardScreen)
 
                         LoginErrorMessage.value = "Customer Exists"
+
+                        LocalArtisansRouter.navigateTo(Screen.CustomerHomeDashboardScreen)
 
 
                     } else {
@@ -245,13 +275,17 @@ class CustomerMainViewModel : ViewModel(){
                         LoginErrorMessage.value = "Customer does not exist"
                     }
 
-                }.addOnCompleteListener { populateArtisans(db) }
+                }.addOnCompleteListener {
+                    if (loginUIState.value.customerExists) {
+
+                    }
+                }
         }
 
     }
 
 
-    fun sendPasswordResetEmail(email: String) : String {
+    fun sendPasswordResetEmail(email: String): String {
         val auth = FirebaseAuth.getInstance()
         var message = ""
 
@@ -260,8 +294,7 @@ class CustomerMainViewModel : ViewModel(){
                 if (task.isSuccessful) {
                     Log.d(TAG, "Email sent.")
                     message = "Email sent."
-                }
-                else{
+                } else {
                     Log.d(TAG, "Account not exists.")
                     message = "Account not exists."
 
@@ -270,25 +303,106 @@ class CustomerMainViewModel : ViewModel(){
         return message
     }
 
-    fun populateArtisans(db: FirebaseFirestore,){
-        db.collection("artisan")
-            .get()
-            .addOnSuccessListener { result ->
-                for (document in result){
-                    val artisan = document.toObject(ArtisanUIState::class.java)
-                    artisanList.value.add(artisan)
+    suspend fun populateArtisans(db: FirebaseFirestore) = withContext(Dispatchers.IO) {
+        val artisanResult = db.collection("artisan").get().await()
+        for (artisanDocument in artisanResult) {
+            val artisan = artisanDocument.toObject(ArtisanToPutOnMarkers::class.java)
 
-                    }
-                artisanList.value.removeIf {it.categories.isNullOrEmpty()
+            // Fetch categories of each artisan
+            val categoryResult = db.collection("artisan")
+                .document(artisanDocument.id)
+                .collection("categories")
+                .get()
+                .await()
+            for (categoryDocument in categoryResult) {
+                val category = categoryDocument.toObject(CategoriesWithProducts::class.java)
+
+                // Fetch products within each category
+                val productResult = db.collection("artisan")
+                    .document(artisanDocument.id)
+                    .collection("categories")
+                    .document(categoryDocument.id)
+                    .collection("product_within_category")
+                    .get()
+                    .await()
+                for (productDocument in productResult) {
+                    val product = productDocument.toObject(LoadedProductFromDB::class.java)
+                    // Add the product to the products list of the category
+                    category.products.add(product)
                 }
-                Log.d(TAG, "Artisan List: ${artisanList.value}")
-            }
-            .addOnFailureListener { exception ->
-                Log.d(TAG, "Error getting documents: ", exception)
-            }
-            .addOnCompleteListener { LocalArtisansRouter.navigateTo(Screen.CustomerHomeDashboardScreen) }
 
+                // Add the category to the categories list of the artisan
+                artisan.categories.add(category)
+            }
+
+            artisanList.value.add(artisan)
+        }
+        artisanList.value.removeIf {
+            it.categories.isNullOrEmpty()
+        }
     }
+
+//    fun populateArtisans(db: FirebaseFirestore) {
+//        db.collection("artisan")
+//            .get()
+//            .addOnSuccessListener { artisanResult ->
+//                for (artisanDocument in artisanResult) {
+//                    val artisan = artisanDocument.toObject(ArtisanUIState::class.java)
+//
+//                    Log.d(TAG, "Artisan: $artisan")
+//
+//                    // Fetch categories of each artisan
+//                    db.collection("artisan")
+//                        .document(artisanDocument.id)
+//                        .collection("categories")
+//                        .get()
+//                        .addOnSuccessListener { categoryResult ->
+//                            for (categoryDocument in categoryResult) {
+//                                val category =
+//                                    categoryDocument.toObject(ProductCategory::class.java)
+//                                artisan.categories.add(category)
+//
+//                                Log.d(TAG, "Artisan ${artisanDocument.id}   Category: ${category}")
+//
+//                                // Fetch products within each category
+//                                db.collection("artisan")
+//                                    .document(artisanDocument.id)
+//                                    .collection("categories")
+//                                    .document(categoryDocument.id)
+//                                    .collection("product_within_category")
+//                                    .get()
+//                                    .addOnSuccessListener { productResult ->
+//                                        for (productDocument in productResult) {
+//                                            val product =
+//                                                productDocument.toObject(LoadedProductFromDB::class.java)
+//                                            // Add the product to the products list of the artisan
+//                                            Log.d(
+//                                                TAG, "Artisan ${artisanDocument.id} " +
+//                                                        "Category ${categoryDocument.id}" +
+//                                                        "  Product: ${product}"
+//                                            )
+//                                            artisan.products_within_categories.add(product)
+//                                        }
+//                                    }
+//                            }
+//                        }
+//
+//                    artisanList.value.add(artisan)
+//                }
+//                artisanList.value.forEach { artisan ->
+//                    Log.d("Taking Artisans from Database", "Artisan List contains of  : ${artisan} \n")
+//                }
+//                artisanList.value.removeIf {
+//                    it.categories.isNullOrEmpty()
+//                }
+//
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.d(TAG, "Error getting documents: ", exception)
+//            }
+//            .addOnCompleteListener { LocalArtisansRouter.navigateTo(Screen.CustomerHomeDashboardScreen) }
+//    }
+
     //////////////////////////////////////////////////////////////////////////////////////////
     //
     ////
@@ -305,86 +419,102 @@ class CustomerMainViewModel : ViewModel(){
     ////
     //////////////////////////////////////////////////////////////////////////////////////////
 
-   var customerSelectedProductItem = mutableStateOf(CustomerSelectedProductItem())
+    val limerick = LatLng(52.66, -8.63)
 
-    var loadedProductFromDB = mutableStateOf(LoadedProductFromDB())
+    val homeLocation = LatLng(52.658664940642296, -8.633123277485389)
+    val defaultCameraPosition = CameraPosition.fromLatLngZoom(limerick, 10f)
+
+    var productsToShow = mutableStateOf(ArrayList<LoadedProductFromDB>())
+
+    var showSelectCategoryDialog by mutableStateOf(false)
+
+    var showSelectProductWithinCategoryDialog by mutableStateOf(false)
 
 
+    var customerSelectedProductItem = mutableStateOf(CustomerSelectedProductItem())
 
 
     fun onEvent(event: CusotmerSelectedProductItemEvent) {
         when (event) {
             is CusotmerSelectedProductItemEvent.SelectedProductArtisanIDChanged -> {
                 customerSelectedProductItem.value = customerSelectedProductItem.value.copy(
-                    artisanID = event.artisanID
+                    artisan = event.artisan
                 )
             }
+
             is CusotmerSelectedProductItemEvent.SelectedProductArtsanProductCategoryChanged -> {
                 customerSelectedProductItem.value = customerSelectedProductItem.value.copy(
-                    artisanProductCategory = event.artisanProductCategory)
+                    artisanProductCategory = event.artisanProductCategory
+                )
 
-                    if (customerSelectedProductItem.value.artisanProductCategory != null) {
-                     //TODO load products from DB
+                if (customerSelectedProductItem.value.artisanProductCategory != null) {
+                    //TODO load products from DB
 
-                        listOfProductsFromDB.value = loadProductsFromDB(customerSelectedProductItem.value.artisanID,
-                            customerSelectedProductItem.value.artisanProductCategory)
-
-                    }
+                }
             }
-            is CusotmerSelectedProductItemEvent.SelectedProductProductItemDiscountPriceChanged -> {
+
+            is CusotmerSelectedProductItemEvent.SelectedProductChanged -> {
                 customerSelectedProductItem.value = customerSelectedProductItem.value.copy(
-                    artisanProductItemDiscountPrice = event.artisanProductItemDiscountPrice
+                    selectedProduct = event.selectedProduct
                 )
             }
-            is CusotmerSelectedProductItemEvent.SelectedProductArtisanProductItemIDChanged -> {
-                customerSelectedProductItem.value = customerSelectedProductItem.value.copy(
-                    artisanProductItemID = event.artisanProductItemID
-                )
-            }
+
             is CusotmerSelectedProductItemEvent.SelectedProductQuantityChanged -> {
                 customerSelectedProductItem.value = customerSelectedProductItem.value.copy(
                     quantityRequested = event.quantityRequested
                 )
             }
+
             is CusotmerSelectedProductItemEvent.SelectedProductRequestedTotalChanged -> {
                 customerSelectedProductItem.value = customerSelectedProductItem.value.copy(
                     requestedTotal = event.requestedTotal
                 )
             }
+
+            else -> {}
         }
     }
 
-    fun loadProductsFromDB(artisanID: String, category: String)
-    : ArrayList<LoadedProductFromDB>{
-        val db = FirebaseFirestore.getInstance()
-        val productList = ArrayList<LoadedProductFromDB>()
+    fun loadProductsFromDB() {
 
-        db.collection("artisan_product_item_within_category")
-            .whereEqualTo("artisanID", artisanID)
-            .whereEqualTo("category", category)
+
+        db.collection("artisan").document(customerSelectedProductItem.value
+            .artisan.artisanID)
+            .collection("product_category")
+            .document(customerSelectedProductItem.value.artisanProductCategory.categoryID)
+            .collection("product_within_category")
             .get()
-            .addOnSuccessListener { result ->
-                for (document in result){
+            .addOnSuccessListener { querySnapshot ->
+                for (document in querySnapshot) {
                     val product = document.toObject(LoadedProductFromDB::class.java)
-                    productList.add(product)
+                    product.productID = document.id
+                    productsToShow.value.add(product)
+                    productsToShow.value.removeIf { it.qty_on_hand == 0 || it.qty_on_hand == null }
                 }
-                Log.d(TAG, "Product List: $productList")
-            }
-            .addOnFailureListener { exception ->
+                Log.d(TAG, "Product List: $productsToShow")
+            }.addOnFailureListener { exception ->
                 Log.d(TAG, "Error getting documents: ", exception)
-            }.addOnCompleteListener {
-                if (productList.isNotEmpty()){
-                    loadedProductFromDB.value = productList[0]
-                }
             }
-        //inside this collection check inside each document elements with artisanID and category
-        //if found add to the list of products
-        //if not found return empty list
 
-        return productList
+
+
+
+
+
+//                for (document in result) {
+//                    val product = document.toObject(LoadedProductFromDB::class.java)
+//                    productsToShow.value.add(product)
+//                    productsToShow.value.removeIf { it.qty_on_hand == 0 || it.qty_on_hand == null }
+//                }
+//                Log.d(TAG, "Product List: $productsToShow")
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.d(TAG, "Error getting documents: ", exception)
+//            }
     }
-
 }
+
+
 
 
 suspend fun toDelay(time: Long) {

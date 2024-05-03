@@ -1,5 +1,6 @@
 package com.example.localartisan3.screens.screens_all.artisan
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,6 +39,8 @@ fun ArtisansCreateProductWithinCategory(createArtisanProductRecordViewModel:
 ) {
 
  //createArtisanProductRecordViewModel.takeDataFromFirestoreOfArtisan()
+
+    var localContext = LocalContext.current
 
     createArtisanProductRecordViewModel.passDataToCreateProductRecord()
         var oneclickCreateProfile = remember { mutableStateOf(false)}
@@ -64,6 +68,16 @@ fun ArtisansCreateProductWithinCategory(createArtisanProductRecordViewModel:
                         "${artisanName}  ${artisanSecndName}"
                     )
                     Spacer(modifier = Modifier.height(10.dp))
+
+                    val categoriesNames = ""
+                    createArtisanProductRecordViewModel.artisanProductRecordUIstate.value.artisanProductCategories.forEach {
+                        categoriesNames.plus(it.ProdCatName + " \n")
+                    }
+
+                    DisplayOnlyTextField(
+                        "Artisan`s Available Product Categories",
+                        categoriesNames
+                    )
                 }
                 item {
                     var categories =
@@ -149,7 +163,7 @@ fun ArtisansCreateProductWithinCategory(createArtisanProductRecordViewModel:
 
                     selectPhotoFromGallaryforProduct(
                                 productCategory =
-                                createArtisanProductRecordViewModel.artisanProductRecordUIstate.value.productCategory,
+                                createArtisanProductRecordViewModel.artisanProductRecordUIstate.value.productCategory.categoryID,
                                 productName =
                                 createArtisanProductRecordViewModel.artisanProductRecordUIstate.value.productName,
                             ){
@@ -168,6 +182,9 @@ fun ArtisansCreateProductWithinCategory(createArtisanProductRecordViewModel:
                         )
                             oneclickCreateProfile.value = false
                     }, isEnabled = oneclickCreateProfile.value)
+                    Toast.makeText(localContext, "Product Item Record Created" +
+                            "\n To Create new Product Please click on " +
+                            "\n \"Next Product Item\" ", Toast.LENGTH_SHORT).show()
                 }
 
                 item {
@@ -194,4 +211,6 @@ fun ArtisansCreateProductWithinCategory(createArtisanProductRecordViewModel:
            }
         }
     }
+
+
 

@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.local_artisan.components.ButtonComponent
+import com.example.local_artisan.components.DisplayOnlyTextField
 import com.example.local_artisan.components.HeadingTextComponentWithLogOut
 
 import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.AllArtisansScreensViewModel
@@ -26,6 +28,10 @@ fun ArtisanHomeScreen(
 ) {
 
     allArtisansScreensViewModel.onArtisanLogin()
+    allArtisansScreensViewModel.takingDataFromFirestoreAndPlaceToValuesOfArtisanUIState()
+
+    allArtisansScreensViewModel.takeDataFromFirestoreOfArtisan()
+    allArtisansScreensViewModel.populateAvailableCategories()
 
     Surface(
         Modifier
@@ -48,15 +54,19 @@ fun ArtisanHomeScreen(
             ButtonComponent(value = "Create Product Category", onButtonClicked = {
                 LocalArtisansRouter.navigateTo(Screen.ArtisanCreateProductCategoryProfile)
             })
-            Spacer(modifier = Modifier.height(40.dp))
-
-
+            Spacer(modifier = Modifier.height(15.dp))
+            Text("Before creating a product within a category, please create a category first.")
+            Spacer(modifier = Modifier.height(15.dp))
             ButtonComponent(value = "Create Product Within Category", onButtonClicked = {
-                allArtisansScreensViewModel.passDataToCreateProductRecord()
-                LocalArtisansRouter.navigateTo(Screen.ArtisansCreateProductWithinCategory)
+                allArtisansScreensViewModel.checkAvailableCategories()
             })
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(allArtisansScreensViewModel.homeScreenCreateCategoryMessage.value, color = Color.Red)
+            Spacer(modifier = Modifier.height(10.dp))
 
+
+
+            Spacer(modifier = Modifier.height(40.dp))
 
             ButtonComponent(value = "View Customer Request " +
                     "\n Send Notifications and Invoices", onButtonClicked = {

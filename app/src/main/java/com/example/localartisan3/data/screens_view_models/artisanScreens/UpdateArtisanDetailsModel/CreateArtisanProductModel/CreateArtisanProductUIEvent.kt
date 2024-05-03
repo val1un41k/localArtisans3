@@ -1,6 +1,7 @@
 package com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.CreateArtisanProductModel
 
 import android.net.Uri
+import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.ProductCategory
 
 sealed class CreateArtisanProductUIEvent {
 
@@ -14,7 +15,7 @@ sealed class CreateArtisanProductUIEvent {
 
     data class ProductImageChanged(val productImage: Uri) : CreateArtisanProductUIEvent()
 
-    data class ProductCategoryChanged(val productCategory: String) : CreateArtisanProductUIEvent()
+    data class ProductCategoryChanged(val productCategory: ProductCategory) : CreateArtisanProductUIEvent()
 
     class QtyOnHandChanged (val qtyOnHand: Int) : CreateArtisanProductUIEvent()
 
