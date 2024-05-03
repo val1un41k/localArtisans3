@@ -75,11 +75,11 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.local_artisan.screens.screens_all.customer.CategoriesWithProducts
 import com.example.local_artisan.screens.screens_all.customer.LoadedProductFromDB
 import com.example.localartisan3.R
 import com.example.localartisan3.data.NavigationItem
 import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.ProductCategory
-import com.example.localartisan3.data.screens_view_models.users_data.CategoriesWithProducts
 import com.example.localartisan3.navigation.LocalArtisansRouter
 import com.example.localartisan3.navigation.Screen
 import com.example.localartisan3.ui.theme.AccentColor

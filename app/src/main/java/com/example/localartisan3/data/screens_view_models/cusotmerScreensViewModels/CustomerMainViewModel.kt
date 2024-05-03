@@ -7,18 +7,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.local_artisan.screens.screens_all.customer.ArtisanToPutOnMarkers
+import com.example.local_artisan.screens.screens_all.customer.CategoriesWithProducts
 
 import com.example.local_artisan.screens.screens_all.customer.CustomerSelectedProductItem
 import com.example.local_artisan.screens.screens_all.customer.LoadedProductFromDB
+import com.example.local_artisan.screens.screens_all.customer.selectingPoruductCateogyDialogWindow
 
 import com.example.localartisan3.data.rules.Validator
 import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.ArtisanProductRecordCreateUIstate
 import com.example.localartisan3.data.screens_view_models.artisanScreens.UpdateArtisanDetailsModel.ArtisansHomeScreen.ProductCategory
 import com.example.localartisan3.data.screens_view_models.login.LoginUIEvent
 import com.example.localartisan3.data.screens_view_models.login.LoginUIState
-import com.example.localartisan3.data.screens_view_models.users_data.ArtisanToPutOnMarkers
+
 import com.example.localartisan3.data.screens_view_models.users_data.ArtisanUIState
-import com.example.localartisan3.data.screens_view_models.users_data.CategoriesWithProducts
+
 import com.example.localartisan3.data.screens_view_models.users_data.Customer
 import com.example.localartisan3.navigation.LocalArtisansRouter
 import com.example.localartisan3.navigation.Screen
@@ -422,7 +425,7 @@ class CustomerMainViewModel : ViewModel() {
     val limerick = LatLng(52.66, -8.63)
 
     val homeLocation = LatLng(52.658664940642296, -8.633123277485389)
-    val defaultCameraPosition = CameraPosition.fromLatLngZoom(limerick, 10f)
+    val defaultCameraPosition = CameraPosition.fromLatLngZoom(limerick, 12f)
 
     var productsToShow = mutableStateOf(ArrayList<LoadedProductFromDB>())
 

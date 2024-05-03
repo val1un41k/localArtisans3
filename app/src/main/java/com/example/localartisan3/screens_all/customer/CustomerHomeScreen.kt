@@ -109,7 +109,6 @@ fun CustomerHomeDashboardScreen(customerMainViewModel: CustomerMainViewModel = v
                Box(Modifier.fillMaxSize()) {
                    GoogleMapView(
                         customerMainViewModel = customerMainViewModel,
-                       customerMainViewModel.artisanList.value,
                        modifier = Modifier.matchParentSize(),
                        cameraPositionState = cameraPositionState,
                        onMapLoaded = {
@@ -117,7 +116,6 @@ fun CustomerHomeDashboardScreen(customerMainViewModel: CustomerMainViewModel = v
                        },
                    )
                    {
-                       showingDialogWindows()
                    }
                    if (!isMapLoaded) {
                        androidx.compose.animation.AnimatedVisibility(
@@ -136,7 +134,7 @@ fun CustomerHomeDashboardScreen(customerMainViewModel: CustomerMainViewModel = v
                    }
                }
 
-
+            showingDialogWindows(customerMainViewModel)
 
             Spacer(modifier = Modifier.height(80.dp))
         }
@@ -154,7 +152,6 @@ fun CustomerHomeDashboardScreenPreview(){
 @Composable
 fun GoogleMapView(
     customerMainViewModel: CustomerMainViewModel = viewModel(),
-    listOfArtisans: List<ArtisanToPutOnMarkers>,
     modifier: Modifier = Modifier,
     cameraPositionState: CameraPositionState = rememberCameraPositionState(),
     onMapLoaded: () -> Unit = {},
@@ -191,7 +188,7 @@ fun GoogleMapView(
                 false
             }
             //TODO Create Function that will populate arrayOfArtisans as Markers
-            populateArtisansAsMarkers(customerMainViewModel ,listOfArtisans)
+           populateArtisansAsMarkers(customerMainViewModel)
             Marker(
                 state = rememberMarkerState(position = customerMainViewModel.homeLocation),
                 draggable = true,
@@ -225,7 +222,7 @@ fun showingDialogWindows(customerMainViewModel: CustomerMainViewModel = viewMode
         } else {
             Toast.makeText(LocalContext.current, "No Products in this Category", Toast.LENGTH_SHORT).show()
             customerMainViewModel.showSelectCategoryDialog = false
-            customerMainViewModel.showSelectCategoryDialog = false
+            customerMainViewModel.showSelectProductWithinCategoryDialog = false
             //repopulate the markers
             //remove parameters from selected product
 
@@ -234,10 +231,9 @@ fun showingDialogWindows(customerMainViewModel: CustomerMainViewModel = viewMode
 }
 
 @Composable
-fun populateArtisansAsMarkers(customerMainViewModel: CustomerMainViewModel = viewModel(),
-    listOfArtisans: List<ArtisanToPutOnMarkers>){
+fun populateArtisansAsMarkers(customerMainViewModel: CustomerMainViewModel = viewModel()){
     var TAG = "populateArtisansAsMarkers"
-    listOfArtisans.forEach {artisan ->
+    customerMainViewModel.artisanList.value.forEach {artisan ->
 
         val position = LatLng(artisan.addressLongitude.toDouble(),artisan.addressLatitude.toDouble())
         Log.d(TAG, "Artisan: ${artisan.fname} ${artisan.lname} has position: $position")
@@ -256,6 +252,8 @@ fun populateArtisansAsMarkers(customerMainViewModel: CustomerMainViewModel = vie
                         .SelectedProductArtisanIDChanged(artisan))
 
                 customerMainViewModel.showSelectCategoryDialog = true
+
+
 
             }
         )
@@ -343,26 +341,37 @@ fun ClickedMarkerInfoWindowContent(artisan: ArtisanToPutOnMarkers){
 @Composable
 fun selectingPoruductCateogyDialogWindow(customerMainViewModel: CustomerMainViewModel = viewModel()){
 
+  var avalialbleCategories =
+    customerMainViewModel
+        .customerSelectedProductItem
+        .value
+        .artisan.categories
+    avalialbleCategories.removeIf{it.products.isEmpty()}
+
+
     Dialog(
-        onDismissRequest = { customerMainViewModel.showSelectCategoryDialog = false}){
+
+        onDismissRequest = {
+            customerMainViewModel.showSelectCategoryDialog = false
+            customerMainViewModel.showSelectProductWithinCategoryDialog = false}){
         Box(modifier = Modifier
             .size(300.dp)
             .background(Color.Gray, RoundedCornerShape(10.dp))){
             Column(){
                 // Checking the product Category
                 Text("Select Artisan`s Category")
-                customerMainViewModel.onEvent(CusotmerSelectedProductItemEvent
-                    .SelectedProductArtsanProductCategoryChanged(
-                        ArtisanCategoryWithProductsDropdown(customerMainViewModel
-                            .customerSelectedProductItem
-                            .value
-                            .artisan
-                            .categories){
-                            //TODO Create Event on Category Changed
-                            //TODO Place request for the product
-                        }
-                    ))
-
+                if (avalialbleCategories.isNullOrEmpty()){
+                    DisplayOnlyTextField("",
+                        "No Products Available from This Artisan")
+                }
+                else {
+                    customerMainViewModel.onEvent(CusotmerSelectedProductItemEvent
+                        .SelectedProductArtsanProductCategoryChanged(
+                            ArtisanCategoryWithProductsDropdown(avalialbleCategories) {
+                            //Leave Empty For a time being
+                            }
+                        ))
+                }
                 Spacer(modifier = Modifier.height(30.dp))
                 Button(
                     onClick = {
@@ -370,10 +379,10 @@ fun selectingPoruductCateogyDialogWindow(customerMainViewModel: CustomerMainView
                         customerMainViewModel.showSelectCategoryDialog = false}){
                     Text("Open Artisan`s Products")
                 }
-
                 Button (
                     onClick = {
                         customerMainViewModel.showSelectCategoryDialog = false
+                        customerMainViewModel.showSelectProductWithinCategoryDialog = false
                     }){
                     Text("Close")
                 }
@@ -392,16 +401,32 @@ fun SelectingProductForCustomerRequest(customerMainViewModel: CustomerMainViewMo
         Box(modifier = Modifier
             .fillMaxSize()
             .background(Color.Gray, RoundedCornerShape(10.dp))){
-            Column(){
+            Column() {
                 // Checking the product Category
-                customerMainViewModel.onEvent(CusotmerSelectedProductItemEvent.SelectedProductChanged(
-                SelectedProductDropdown(customerMainViewModel.productsToShow.value
-                ){
-                    PopulateProductDetails()
-                }))
+                var availableProducts = customerMainViewModel.customerSelectedProductItem.value
+                    .artisanProductCategory
+                if (availableProducts.products.isNullOrEmpty()) {
+                    DisplayOnlyTextField(
+                        "",
+                        "No Products Available from This Artisan"
+                    )
+                } else {
+
+                    customerMainViewModel.onEvent(
+                        CusotmerSelectedProductItemEvent.SelectedProductChanged(
+                            SelectedProductDropdown(
+                                //take products from Artisans Category
+                                //products Within category of the Artisan
+                                availableProducts.products
+
+                            ) {
+                                PopulateProductDetails()
+                            })
+                    )
 
 
                 }
+            }
 
             }
         }
@@ -410,19 +435,18 @@ fun SelectingProductForCustomerRequest(customerMainViewModel: CustomerMainViewMo
 
 @Composable
 fun PopulateProductDetails(customerMainViewModel: CustomerMainViewModel = viewModel()){
-
     Text(
-        text = "Product Item name:  ${customerMainViewModel.selectedProduct.value.productName}" +
+        text = "Product Item name:  ${customerMainViewModel.customerSelectedProductItem.value.selectedProduct.product_name}" +
 
-                "\n Product Item Description: ${ customerMainViewModel.selectedProduct.value.productDescription }" +
+                "\n Product Item Description: ${ customerMainViewModel.customerSelectedProductItem.value.selectedProduct.product_description}" +
 
-                "\n Product Item Price: ${customerMainViewModel.selectedProduct.value.productPrice    }" +
+                "\n Product Item Price: ${customerMainViewModel.customerSelectedProductItem.value.selectedProduct.product_price}" +
 
-                "\n Product Item Discounted Price: ${ customerMainViewModel.selectedProduct.value.productDiscountPrice  }" +
+                "\n Product Item Discounted Price: ${ customerMainViewModel.customerSelectedProductItem.value.selectedProduct.product_discount_price }" +
                 "" +
-                "\n Product Item Quantity on Hand: ${  customerMainViewModel.selectedProduct.value.qtyOnHand }" +
+                "\n Product Item Quantity on Hand: ${ customerMainViewModel.customerSelectedProductItem.value.selectedProduct.qty_on_hand }" +
 
-                "\n Product Item Picture ${ customerMainViewModel.selectedProduct.value.productImage  }",
+                "\n Product Item Picture ${ customerMainViewModel.customerSelectedProductItem.value.selectedProduct.product_picture  }",
 
         textAlign = TextAlign.Left,
         modifier = Modifier
