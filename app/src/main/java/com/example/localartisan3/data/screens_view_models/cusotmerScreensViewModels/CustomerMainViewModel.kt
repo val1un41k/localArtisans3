@@ -433,6 +433,8 @@ class CustomerMainViewModel : ViewModel() {
 
     var showSelectProductWithinCategoryDialog by mutableStateOf(false)
 
+    var showSelectProductQuantityDialog by mutableStateOf(false)
+
 
     var customerSelectedProductItem = mutableStateOf(CustomerSelectedProductItem())
 

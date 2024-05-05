@@ -211,13 +211,9 @@ fun showingDialogWindows(customerMainViewModel: CustomerMainViewModel = viewMode
 
     if(customerMainViewModel.showSelectProductWithinCategoryDialog){
         customerMainViewModel.productsToShow.value =
-            customerMainViewModel.productsToShow.value.filter{
-                customerMainViewModel.customerSelectedProductItem
-                    .value.artisanProductCategory.prodCatName == it.artisan_name
-
-            } as ArrayList<LoadedProductFromDB>
-
-        if (customerMainViewModel.productsToShow.value.isNotEmpty()){
+            customerMainViewModel.customerSelectedProductItem.value.artisanProductCategory.products
+        if (customerMainViewModel.productsToShow.value.isNotEmpty()
+            && customerMainViewModel.productsToShow.value != null){
             SelectingProductForCustomerRequest()
         } else {
             Toast.makeText(LocalContext.current, "No Products in this Category", Toast.LENGTH_SHORT).show()
@@ -396,6 +392,7 @@ fun selectingPoruductCateogyDialogWindow(customerMainViewModel: CustomerMainView
 
 @Composable
 fun SelectingProductForCustomerRequest(customerMainViewModel: CustomerMainViewModel = viewModel()){
+
     Dialog(
         onDismissRequest = { customerMainViewModel.showSelectCategoryDialog = false}){
         Box(modifier = Modifier
@@ -420,14 +417,26 @@ fun SelectingProductForCustomerRequest(customerMainViewModel: CustomerMainViewMo
                                 availableProducts.products
 
                             ) {
-                                PopulateProductDetails()
+
                             })
                     )
-
+                    Button(
+                        onClick = {
+                            customerMainViewModel.showSelectProductQuantityDialog = true
+                        }) {
+                        Text("See Product Details")
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
 
                 }
+                Button(
+                    onClick = {
+                        customerMainViewModel.showSelectCategoryDialog = false
+                        customerMainViewModel.showSelectProductWithinCategoryDialog = false
+                    }) {
+                    Text("Close")
+                }
             }
-
             }
         }
     }
